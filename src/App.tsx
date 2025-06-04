@@ -14,6 +14,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import AddProperty from "./pages/AddProperty";
 import Favorites from "./pages/Favorites";
+import PropertyDetail from "./pages/PropertyDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/add-property" element={<AddProperty />} />
                   <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/property/:id" element={<PropertyDetail />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
