@@ -94,7 +94,11 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
     const formData = watch();
     return (
       Object.values(formData).some(
-        (value) => value !== "" && value !== undefined,
+        (value) =>
+          value !== "" &&
+          value !== undefined &&
+          value !== "all" &&
+          value !== "any",
       ) || selectedAmenities.length > 0
     );
   };
