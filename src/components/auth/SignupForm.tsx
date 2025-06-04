@@ -63,6 +63,14 @@ const SignupForm: React.FC = () => {
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phoneNumber: "",
+      password: "",
+      confirmPassword: "",
+      userType: undefined, // Let user select explicitly
+    },
   });
 
   const password = watch("password");
