@@ -151,6 +151,8 @@ const SignupForm: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <DemoCredentials />
+
             {apiError && (
               <Alert variant="destructive">
                 <AlertDescription>{apiError}</AlertDescription>
