@@ -150,11 +150,14 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Suburbs</SelectItem>
-                  {selectedCity && ZIMBABWE_LOCATIONS[selectedCity as keyof typeof ZIMBABWE_LOCATIONS]?.map(suburb => (
-                    <SelectItem key={suburb} value={suburb}>
-                      {suburb}
-                    </SelectItem>
-                  ))}
+                  {selectedCity &&
+                    ZIMBABWE_LOCATIONS[
+                      selectedCity as keyof typeof ZIMBABWE_LOCATIONS
+                    ]?.map((suburb) => (
+                      <SelectItem key={suburb} value={suburb}>
+                        {suburb}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -172,7 +175,7 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Cities</SelectItem>
-                  {Object.keys(ZIMBABWE_LOCATIONS).map(city => (
+                  {Object.keys(ZIMBABWE_LOCATIONS).map((city) => (
                     <SelectItem key={city} value={city}>
                       {city}
                     </SelectItem>
@@ -237,7 +240,6 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                       <SelectItem value="4">4+</SelectItem>
                       <SelectItem value="5">5+</SelectItem>
                     </SelectContent>
-                </SelectContent>
                   </Select>
                 </div>
 
@@ -256,7 +258,9 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                       <SelectItem value="any">Any</SelectItem>
                       <SelectItem value="furnished">Furnished</SelectItem>
                       <SelectItem value="unfurnished">Unfurnished</SelectItem>
-                      <SelectItem value="partially_furnished">Partially Furnished</SelectItem>
+                      <SelectItem value="partially_furnished">
+                        Partially Furnished
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
