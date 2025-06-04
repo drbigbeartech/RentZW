@@ -235,7 +235,10 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                   <Label htmlFor="bedrooms">Bedrooms</Label>
                   <Select
                     onValueChange={(value) =>
-                      setValue("bedrooms", value ? parseInt(value) : undefined)
+                      setValue(
+                        "bedrooms",
+                        value && value !== "any" ? parseInt(value) : undefined,
+                      )
                     }
                     disabled={isLoading}
                   >
