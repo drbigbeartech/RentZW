@@ -208,24 +208,25 @@ const SignupForm: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="userType">I am a...</Label>
+                <Label htmlFor="userType">I am a... *</Label>
                 <RadioGroup
-                  value={watch("userType")}
-                  onValueChange={(value) =>
-                    setValue("userType", value as "tenant" | "landlord")
-                  }
-                  className="flex space-x-6"
+                  value={watch("userType") || ""}
+                  onValueChange={(value) => {
+                    console.log("RadioGroup value changed:", value);
+                    setValue("userType", value as "tenant" | "landlord");
+                  }}
+                  className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-6"
                   disabled={isLoading}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="tenant" id="tenant" />
-                    <Label htmlFor="tenant">
+                    <Label htmlFor="tenant" className="cursor-pointer">
                       Tenant (Looking for property)
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="landlord" id="landlord" />
-                    <Label htmlFor="landlord">
+                    <Label htmlFor="landlord" className="cursor-pointer">
                       Landlord (Listing property)
                     </Label>
                   </div>
