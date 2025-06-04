@@ -92,9 +92,14 @@ const SignupForm: React.FC = () => {
 
       // Debug: Log the form data
       console.log("Form data:", data);
+      console.log("UserType value:", data.userType);
+      console.log("UserType type:", typeof data.userType);
 
-      // Check if userType is properly set
-      if (!data.userType) {
+      // Manual validation for userType
+      if (
+        !data.userType ||
+        (data.userType !== "tenant" && data.userType !== "landlord")
+      ) {
         setApiError("Please select whether you are a tenant or landlord");
         return;
       }
@@ -106,13 +111,17 @@ const SignupForm: React.FC = () => {
         return;
       }
 
-      await signup({
+      // Log what we're sending to the API
+      const signupData = {
         fullName: data.fullName,
         email: data.email,
         phoneNumber: data.phoneNumber,
         password: data.password,
         userType: data.userType,
-      });
+      };
+      console.log("Sending to signup API:", signupData);
+
+      await signup(signupData);
 
       navigate("/dashboard");
     } catch (error: any) {
