@@ -14,7 +14,12 @@ import {
   setRefreshToken,
   clearAuth,
 } from "@/lib/auth";
-import api, { endpoints } from "@/lib/api";
+import {
+  mockSignup,
+  mockLogin,
+  mockGetProfile,
+  initializeMockUsers,
+} from "@/lib/mockAuth";
 import { toast } from "react-hot-toast";
 
 interface AuthContextType {
@@ -56,6 +61,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = !!user && !!getAuthToken();
 
   useEffect(() => {
+    // Initialize mock users for demo
+    initializeMockUsers();
+
     // Initialize auth state from localStorage
     const initializeAuth = async () => {
       const token = getAuthToken();
@@ -64,11 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (token && storedUser) {
         setUserState(storedUser);
 
-        // Verify token is still valid
+        // Verify token is still valid (for mock, we'll always consider it valid)
         try {
-          const response = await api.get(endpoints.profile);
-          setUserState(response.data.data);
-          setUser(response.data.data);
+          const userData = await mockGetProfile(token);
+          setUserState(userData);
+          setUser(userData);
         } catch (error) {
           // Token is invalid, clear auth
           clearAuth();
@@ -85,12 +93,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<void> => {
     try {
       setIsLoading(true);
-      const response = await api.post<AuthResponse>(endpoints.login, {
-        email,
-        password,
-      });
 
-      const { user: userData, token, refreshToken } = response.data;
+      const response = await mockLogin(email, password);
+      const { user: userData, token, refreshToken } = response;
 
       setAuthToken(token);
       setRefreshToken(refreshToken);
@@ -99,7 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       toast.success(`Welcome back, ${userData.fullName}!`);
     } catch (error: any) {
-      const message = error.response?.data?.message || "Login failed";
+      const message = error.message || "Login failed";
       toast.error(message);
       throw error;
     } finally {
@@ -110,20 +115,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signup = async (userData: SignupData): Promise<void> => {
     try {
       setIsLoading(true);
-      const response = await api.post<AuthResponse>(endpoints.signup, userData);
 
-      const { user: newUser, token, refreshToken } = response.data;
+      const response = await mockSignup(userData);
+      const { user: newUser, token, refreshToken } = response;
 
       setAuthToken(token);
       setRefreshToken(refreshToken);
       setUser(newUser);
       setUserState(newUser);
 
-      toast.success(
-        "Account created successfully! Please check your email for verification.",
-      );
+      toast.success("Account created successfully! Welcome to RentZW!");
     } catch (error: any) {
-      const message = error.response?.data?.message || "Signup failed";
+      const message = error.message || "Signup failed";
       toast.error(message);
       throw error;
     } finally {
@@ -135,11 +138,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     clearAuth();
     setUserState(null);
     toast.success("Logged out successfully");
-
-    // Optional: Call logout API endpoint
-    api.post(endpoints.logout).catch(() => {
-      // Ignore errors as user is already logged out locally
-    });
   };
 
   const updateUser = (userData: Partial<User>) => {
