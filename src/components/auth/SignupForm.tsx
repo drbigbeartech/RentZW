@@ -191,7 +191,10 @@ const SignupForm: React.FC = () => {
               <div className="space-y-2">
                 <Label htmlFor="userType">I am a...</Label>
                 <RadioGroup
-                  {...register("userType")}
+                  value={watch("userType")}
+                  onValueChange={(value) =>
+                    setValue("userType", value as "tenant" | "landlord")
+                  }
                   className="flex space-x-6"
                   disabled={isLoading}
                 >
