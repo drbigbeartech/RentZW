@@ -89,6 +89,15 @@ const SignupForm: React.FC = () => {
     try {
       setApiError("");
 
+      // Debug: Log the form data
+      console.log("Form data:", data);
+
+      // Check if userType is properly set
+      if (!data.userType) {
+        setApiError("Please select whether you are a tenant or landlord");
+        return;
+      }
+
       // Final password validation
       const passwordValidationErrors = validatePassword(data.password);
       if (passwordValidationErrors.length > 0) {
