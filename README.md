@@ -80,6 +80,34 @@ A comprehensive property rental web application built for Zimbabwe, connecting t
 5. **Open your browser**
    Navigate to `http://localhost:5173`
 
+## 🎮 Demo Mode
+
+The application runs in demo mode with a mock authentication system. You can:
+
+### Test with Demo Accounts
+
+- **Tenant Account**: `tenant@example.com` / `password123`
+- **Landlord Account**: `landlord@example.com` / `password123`
+
+### Create New Accounts
+
+- Sign up as either a tenant or landlord
+- All data is stored locally in your browser
+- No backend server required for demo
+
+### Features Available in Demo Mode
+
+- ✅ User registration and login
+- ✅ Property browsing and search
+- ✅ Property listing (landlords)
+- ✅ Favorites system (tenants)
+- ✅ Application submission
+- ✅ Dashboard functionality
+- ✅ Currency conversion
+- ✅ Responsive design
+
+**Note**: All data is stored in localStorage and will persist until you clear your browser data.
+
 ## 🛠️ Development
 
 ### Available Scripts
