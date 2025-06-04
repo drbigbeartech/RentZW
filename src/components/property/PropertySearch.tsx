@@ -46,8 +46,8 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
   const selectedCity = watch("city");
 
   useEffect(() => {
-    if (selectedCity) {
-      setValue("suburb", "");
+    if (selectedCity && selectedCity !== "all") {
+      setValue("suburb", undefined);
     }
   }, [selectedCity, setValue]);
 
@@ -132,7 +132,9 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
             <div className="space-y-2">
               <Label htmlFor="city">City</Label>
               <Select
-                onValueChange={(value) => setValue('city', value === 'all' ? undefined : value)}
+                onValueChange={(value) =>
+                  setValue("city", value === "all" ? undefined : value)
+                }
                 disabled={isLoading}
               >
                 <SelectTrigger>
@@ -152,8 +154,10 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
             <div className="space-y-2">
               <Label htmlFor="suburb">Suburb</Label>
               <Select
-                onValueChange={(value) => setValue('suburb', value === 'all' ? undefined : value)}
-                disabled={isLoading || !selectedCity}
+                onValueChange={(value) =>
+                  setValue("suburb", value === "all" ? undefined : value)
+                }
+                disabled={isLoading || !selectedCity || selectedCity === "all"}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select suburb" />
@@ -161,6 +165,7 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                 <SelectContent>
                   <SelectItem value="all">All Suburbs</SelectItem>
                   {selectedCity &&
+                    selectedCity !== "all" &&
                     ZIMBABWE_LOCATIONS[
                       selectedCity as keyof typeof ZIMBABWE_LOCATIONS
                     ]?.map((suburb) => (
@@ -175,20 +180,24 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
             <div className="space-y-2">
               <Label htmlFor="propertyType">Property Type</Label>
               <Select
-                onValueChange={(value) => setValue('city', value === 'all' ? undefined : value)}
+                onValueChange={(value) =>
+                  setValue(
+                    "propertyType",
+                    value === "all" ? undefined : (value as any),
+                  )
+                }
                 disabled={isLoading}
-              >
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Any type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Cities</SelectItem>
-                  {Object.keys(ZIMBABWE_LOCATIONS).map((city) => (
-                    <SelectItem key={city} value={city}>
-                      {city}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">Any Type</SelectItem>
+                  <SelectItem value="house">House</SelectItem>
+                  <SelectItem value="apartment">Apartment</SelectItem>
+                  <SelectItem value="townhouse">Townhouse</SelectItem>
+                  <SelectItem value="studio">Studio</SelectItem>
+                  <SelectItem value="room">Room</SelectItem>
                 </SelectContent>
               </Select>
             </div>
