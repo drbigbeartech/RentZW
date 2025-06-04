@@ -256,10 +256,9 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                 <div className="space-y-2">
                   <Label htmlFor="furnishingStatus">Furnishing</Label>
                   <Select
-                    onValueChange={(value) =>
-                      setValue("furnishingStatus", value as any)
-                    }
+                    onValueChange={(value) => setValue('bedrooms', (value && value !== 'any') ? parseInt(value) : undefined)}
                     disabled={isLoading}
+                  >
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Any" />
