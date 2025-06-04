@@ -220,8 +220,9 @@ const SignupForm: React.FC = () => {
                 <Label htmlFor="userType">I am a... *</Label>
                 <RadioGroup
                   value={watch("userType") || ""}
-                  onValueChange={(value) => setValue('userType', value as 'tenant' | 'landlord')}
-                  }}
+                  onValueChange={(value) =>
+                    setValue("userType", value as "tenant" | "landlord")
+                  }
                   className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-6"
                   disabled={isLoading}
                 >
