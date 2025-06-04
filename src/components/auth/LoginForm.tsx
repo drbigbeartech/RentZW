@@ -17,6 +17,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import DemoCredentials from "./DemoCredentials";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -71,6 +72,8 @@ const LoginForm: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <DemoCredentials />
+
             {apiError && (
               <Alert variant="destructive">
                 <AlertDescription>{apiError}</AlertDescription>
