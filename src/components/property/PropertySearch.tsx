@@ -67,10 +67,16 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
       amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
     };
 
-    // Remove empty values
+    // Remove empty values and "all"/"any" placeholder values
     Object.keys(filters).forEach((key) => {
       const value = filters[key as keyof SearchFilters];
-      if (value === "" || value === undefined || value === null) {
+      if (
+        value === "" ||
+        value === undefined ||
+        value === null ||
+        value === "all" ||
+        value === "any"
+      ) {
         delete filters[key as keyof SearchFilters];
       }
     });
