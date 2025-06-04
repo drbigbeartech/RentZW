@@ -149,15 +149,12 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                   <SelectValue placeholder="Select suburb" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Suburbs</SelectItem>
-                  {selectedCity &&
-                    ZIMBABWE_LOCATIONS[
-                      selectedCity as keyof typeof ZIMBABWE_LOCATIONS
-                    ]?.map((suburb) => (
-                      <SelectItem key={suburb} value={suburb}>
-                        {suburb}
-                      </SelectItem>
-                    ))}
+                  <SelectItem value="all">All Suburbs</SelectItem>
+                  {selectedCity && ZIMBABWE_LOCATIONS[selectedCity as keyof typeof ZIMBABWE_LOCATIONS]?.map(suburb => (
+                    <SelectItem key={suburb} value={suburb}>
+                      {suburb}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -174,12 +171,12 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                   <SelectValue placeholder="Any type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any Type</SelectItem>
-                  <SelectItem value="house">House</SelectItem>
-                  <SelectItem value="apartment">Apartment</SelectItem>
-                  <SelectItem value="townhouse">Townhouse</SelectItem>
-                  <SelectItem value="studio">Studio</SelectItem>
-                  <SelectItem value="room">Room</SelectItem>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  {Object.keys(ZIMBABWE_LOCATIONS).map(city => (
+                    <SelectItem key={city} value={city}>
+                      {city}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -233,13 +230,14 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                       <SelectValue placeholder="Any" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any</SelectItem>
+                      <SelectItem value="any">Any</SelectItem>
                       <SelectItem value="1">1+</SelectItem>
                       <SelectItem value="2">2+</SelectItem>
                       <SelectItem value="3">3+</SelectItem>
                       <SelectItem value="4">4+</SelectItem>
                       <SelectItem value="5">5+</SelectItem>
                     </SelectContent>
+                </SelectContent>
                   </Select>
                 </div>
 
@@ -255,12 +253,10 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
                       <SelectValue placeholder="Any" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any</SelectItem>
+                      <SelectItem value="any">Any</SelectItem>
                       <SelectItem value="furnished">Furnished</SelectItem>
                       <SelectItem value="unfurnished">Unfurnished</SelectItem>
-                      <SelectItem value="partially_furnished">
-                        Partially Furnished
-                      </SelectItem>
+                      <SelectItem value="partially_furnished">Partially Furnished</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
