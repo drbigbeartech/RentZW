@@ -38,6 +38,7 @@ const signupSchema = z
     confirmPassword: z.string(),
     userType: z.enum(["tenant", "landlord"], {
       required_error: "Please select whether you are a tenant or landlord",
+      invalid_type_error: "Please select whether you are a tenant or landlord",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
