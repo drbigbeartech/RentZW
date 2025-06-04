@@ -132,8 +132,9 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
             <div className="space-y-2">
               <Label htmlFor="city">City</Label>
               <Select
-                onValueChange={(value) => setValue("city", value)}
+                onValueChange={(value) => setValue('propertyType', value === 'all' ? undefined : value as any)}
                 disabled={isLoading}
+              >
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select city" />
@@ -152,8 +153,9 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
             <div className="space-y-2">
               <Label htmlFor="suburb">Suburb</Label>
               <Select
-                onValueChange={(value) => setValue("suburb", value)}
+                onValueChange={(value) => setValue('suburb', value === 'all' ? undefined : value)}
                 disabled={isLoading || !selectedCity}
+              >
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select suburb" />
@@ -175,10 +177,9 @@ const PropertySearch: React.FC<PropertySearchProps> = ({
             <div className="space-y-2">
               <Label htmlFor="propertyType">Property Type</Label>
               <Select
-                onValueChange={(value) =>
-                  setValue("propertyType", value as any)
-                }
+                onValueChange={(value) => setValue('city', value === 'all' ? undefined : value)}
                 disabled={isLoading}
+              >
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Any type" />
