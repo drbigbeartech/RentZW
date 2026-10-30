@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { Property, SearchFilters, PropertyImage } from "@/types";
+import { Property, SearchFilters, PropertyImage, PropertyApplication } from "@/types";
 
 // Helper to map DB row to frontend Property interface
 export function mapRowToProperty(row: any): Property {
@@ -42,13 +42,14 @@ export function mapRowToProperty(row: any): Property {
       createdAt: row.created_at,
     },
     views: Number(row.views || 0),
+    isFeatured: Boolean(row.is_featured),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
 export const propertyService = {
-  // Fetch properties with optional search filters
+  // Fetch properties with optional search filters (Featured first)
   async getProperties(filters: SearchFilters = {}, page = 1, limit = 12): Promise<{
     properties: Property[];
     total: number;
@@ -58,6 +59,7 @@ export const propertyService = {
       .from("properties")
       .select("*, profiles(full_name, email, phone_number)", { count: "exact" })
       .eq("status", "available")
+      .order("is_featured", { ascending: false })
       .order("created_at", { ascending: false });
 
     // Apply filters
@@ -158,6 +160,91 @@ export const propertyService = {
 
     if (error) {
       console.error("Error deleting property:", error);
+      throw error;
+    }
+    return true;
+  },
+
+  // Boost property (Monetization: Paid feature)
+  async boostProperty(propertyId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from("properties")
+      .update({
+        is_featured: true,
+        featured_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .eq("id", propertyId);
+
+    if (error) {
+      console.error("Error boosting property:", error);
+      throw error;
+    }
+    return true;
+  },
+
+  // Submit in-app viewing request or inquiry (Platform protected)
+  async submitViewingRequest(payload: {
+    propertyId: string;
+    tenantId?: string;
+    tenantName: string;
+    tenantPhone: string;
+    tenantEmail: string;
+    viewingDate: string;
+    viewingTimeSlot: string;
+    message: string;
+  }) {
+    const { data, error } = await supabase
+      .from("property_applications")
+      .insert({
+        property_id: payload.propertyId,
+        tenant_id: payload.tenantId || null,
+        tenant_name: payload.tenantName,
+        tenant_phone: payload.tenantPhone,
+        tenant_email: payload.tenantEmail,
+        viewing_date: payload.viewingDate || null,
+        viewing_time_slot: payload.viewingTimeSlot,
+        message: payload.message,
+        status: "pending",
+        inquiry_type: "viewing",
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error submitting viewing request:", error);
+      throw error;
+    }
+    return data;
+  },
+
+  // Fetch viewing requests / inquiries for landlord or admin
+  async getInquiriesForLandlord(userId: string, isAdmin = false): Promise<any[]> {
+    let query = supabase
+      .from("property_applications")
+      .select("*, properties(id, title, city, suburb, price_usd, landlord_id)")
+      .order("created_at", { ascending: false });
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error fetching inquiries:", error);
+      return [];
+    }
+
+    if (isAdmin) return data || [];
+
+    // Filter to properties owned by this landlord
+    return (data || []).filter((item: any) => item.properties?.landlord_id === userId);
+  },
+
+  // Update inquiry / viewing status
+  async updateInquiryStatus(inquiryId: string, status: "approved" | "rejected"): Promise<boolean> {
+    const { error } = await supabase
+      .from("property_applications")
+      .update({ status })
+      .eq("id", inquiryId);
+
+    if (error) {
+      console.error("Error updating inquiry status:", error);
       throw error;
     }
     return true;

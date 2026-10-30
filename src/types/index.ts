@@ -25,6 +25,7 @@ export interface Property {
   landlordId: string;
   landlord?: User;
   views: number;
+  isFeatured?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,12 +45,17 @@ export interface Location {
 export interface PropertyApplication {
   id: string;
   propertyId: string;
-  tenantId: string;
+  tenantId?: string;
+  tenantName?: string;
+  tenantPhone?: string;
+  tenantEmail?: string;
+  viewingDate?: string;
+  viewingTimeSlot?: string;
   message: string;
   status: ApplicationStatus;
   createdAt: string;
-  property: Property;
-  tenant: User;
+  property?: Property;
+  tenant?: User;
 }
 
 export interface SavedProperty {
@@ -104,6 +110,13 @@ export interface AuthResponse {
   user: User;
   token: string;
   refreshToken: string;
+}
+
+export interface DashboardStats {
+  totalProperties: number;
+  totalViews: number;
+  totalInquiries: number;
+  totalApplications: number;
 }
 
 export interface PlatformStats {

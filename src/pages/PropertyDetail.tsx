@@ -6,26 +6,32 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatPrice } from "@/lib/currency";
 import { propertyService } from "@/lib/propertyService";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import LoadingSpinner, { PageLoader } from "@/components/common/LoadingSpinner";
 import {
   MapPin,
-  Bed,
-  Bath,
   Calendar,
   User,
-  Phone,
-  Mail,
   Heart,
   Send,
   Eye,
   ArrowLeft,
   Share,
   CheckCircle,
-  MessageCircle,
+  Clock,
+  ShieldCheck,
+  Star,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -38,15 +44,31 @@ const PropertyDetail: React.FC = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
-  const [applicationMessage, setApplicationMessage] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // In-app viewing request state
+  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
+  const [inquirySubmitted, setInquirySubmitted] = useState(false);
+  const [tenantName, setTenantName] = useState(user?.fullName || "");
+  const [tenantPhone, setTenantPhone] = useState(user?.phoneNumber || "");
+  const [tenantEmail, setTenantEmail] = useState(user?.email || "");
+  const [viewingDate, setViewingDate] = useState("");
+  const [viewingTimeSlot, setViewingTimeSlot] = useState("Morning (9:00 AM - 12:00 PM)");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (id) {
       loadProperty(id);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (user) {
+      if (!tenantName) setTenantName(user.fullName || "");
+      if (!tenantPhone) setTenantPhone(user.phoneNumber || "");
+      if (!tenantEmail) setTenantEmail(user.email || "");
+    }
+  }, [user]);
 
   const loadProperty = async (propertyId: string) => {
     try {
@@ -90,42 +112,41 @@ const PropertyDetail: React.FC = () => {
     }
   };
 
-  const handleSubmitApplication = async () => {
-    if (!isAuthenticated) {
-      toast.error("Please login to apply for properties");
+  const handleSubmitViewingRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!property) return;
+
+    if (!tenantName.trim()) {
+      toast.error("Please enter your name");
       return;
     }
 
-    if (user?.userType !== "tenant") {
-      toast.error("Only tenants can apply for properties");
-      return;
-    }
-
-    if (!applicationMessage.trim()) {
-      toast.error("Please enter a message with your application");
+    if (!tenantPhone.trim()) {
+      toast.error("Please enter your phone number so the landlord can confirm");
       return;
     }
 
     try {
-      setIsSubmittingApplication(true);
-      // Simulate submission / connect to property_applications table
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success("Application submitted successfully to landlord!");
-      setApplicationMessage("");
-    } catch (error) {
-      toast.error("Failed to submit application");
+      setIsSubmittingInquiry(true);
+      await propertyService.submitViewingRequest({
+        propertyId: property.id,
+        tenantId: user?.id,
+        tenantName,
+        tenantPhone,
+        tenantEmail,
+        viewingDate,
+        viewingTimeSlot,
+        message: message || `Hi, I would like to schedule a viewing for ${property.title}.`,
+      });
+
+      setInquirySubmitted(true);
+      toast.success("Viewing request submitted securely through RentZW!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to submit viewing request");
     } finally {
-      setIsSubmittingApplication(false);
+      setIsSubmittingInquiry(false);
     }
-  };
-
-  const handleContactLandlord = () => {
-    if (!property?.landlord?.email) return;
-
-    const subject = `Inquiry about ${property.title}`;
-    const body = `Hello ${property.landlord.fullName},\n\nI am interested in your property listed on RentZW: ${property.title}\nLocation: ${property.location.suburb}, ${property.location.city}\nPrice: $${property.priceUSD}/month\n\nPlease let me know if it is still available and when I can view it.\n\nThank you.`;
-
-    window.location.href = `mailto:${property.landlord.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   const handleShare = async () => {
@@ -173,14 +194,6 @@ const PropertyDetail: React.FC = () => {
     exchangeRate.ZWL,
   );
 
-  // WhatsApp click-to-chat setup
-  const rawPhone = property.landlord?.phoneNumber || "+263771234567";
-  const cleanPhone = rawPhone.replace(/[^0-9]/g, "");
-  const whatsappText = encodeURIComponent(
-    `Hello ${property.landlord?.fullName || 'Landlord'}, I am inquiring about your property on RentZW:\n"${property.title}" in ${property.location.suburb}, ${property.location.city} ($${property.priceUSD}/month).\nLink: ${window.location.href}`
-  );
-  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${whatsappText}`;
-
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Navigation */}
@@ -217,7 +230,7 @@ const PropertyDetail: React.FC = () => {
           <Card>
             <CardContent className="p-0">
               <div className="relative">
-                <div className="aspect-[16/10] overflow-hidden rounded-t-lg">
+                <div className="aspect-[16/10] overflow-hidden rounded-t-lg bg-gray-100">
                   <img
                     src={property.images[currentImageIndex]?.url}
                     alt={property.images[currentImageIndex]?.alt}
@@ -244,13 +257,18 @@ const PropertyDetail: React.FC = () => {
                   </div>
                 )}
 
-                {/* Status Badge */}
-                <div className="absolute top-4 left-4">
+                {/* Status & Featured Badge */}
+                <div className="absolute top-4 left-4 flex gap-2">
+                  {property.isFeatured && (
+                    <Badge className="bg-amber-500 text-white font-semibold flex items-center shadow-md">
+                      <Star className="h-3 w-3 mr-1 fill-white" /> FEATURED
+                    </Badge>
+                  )}
                   <Badge
                     variant={
                       property.status === "available" ? "default" : "secondary"
                     }
-                    className="text-sm font-semibold"
+                    className="text-sm font-semibold shadow-md"
                   >
                     {property.status.toUpperCase()}
                   </Badge>
@@ -363,129 +381,146 @@ const PropertyDetail: React.FC = () => {
           </Card>
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar: In-App Viewing & Inquiry Booking Form */}
         <div className="space-y-6">
-          {/* Landlord Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>Landlord / Agent Contact</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Security & Verification Guarantee */}
+          <Card className="border-blue-100 bg-blue-50/50">
+            <CardContent className="p-4 flex items-start space-x-3">
+              <ShieldCheck className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-gray-900">
-                    {property.landlord?.fullName || "Verified Landlord"}
-                  </h4>
-                  {property.landlord?.isVerified && (
-                    <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-800 border-emerald-200">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Verified
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600">Listed on RentZW</p>
-              </div>
-
-              <div className="space-y-2.5">
-                {/* WhatsApp Direct Chat Button */}
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full block"
-                >
-                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Chat on WhatsApp
-                  </Button>
-                </a>
-
-                {/* Direct Phone Call */}
-                {property.landlord?.phoneNumber && (
-                  <a
-                    href={`tel:${property.landlord.phoneNumber}`}
-                    className="w-full block"
-                  >
-                    <Button variant="outline" className="w-full">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call {property.landlord.phoneNumber}
-                    </Button>
-                  </a>
-                )}
-
-                {/* Email Inquiry */}
-                {property.landlord?.email && (
-                  <Button variant="ghost" className="w-full" onClick={handleContactLandlord}>
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send Email Inquiry
-                  </Button>
-                )}
-              </div>
-
-              <div className="text-xs text-gray-500 pt-2 border-t">
-                Listed on {new Date(property.createdAt).toLocaleDateString()}
+                <h4 className="text-sm font-semibold text-gray-900">Verified RentZW Listing</h4>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Direct viewing appointments are managed securely through RentZW to protect tenant deposits and prevent rental scams.
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Application Form */}
-          {user?.userType === "tenant" && property.status === "available" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Apply for this Property</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="application-message">
-                    Message to Landlord
-                  </Label>
-                  <Textarea
-                    id="application-message"
-                    placeholder="Introduce yourself, occupation, and desired move-in date..."
-                    value={applicationMessage}
-                    onChange={(e) => setApplicationMessage(e.target.value)}
-                    rows={4}
-                    disabled={isSubmittingApplication}
-                  />
-                </div>
-
-                <Button
-                  className="w-full"
-                  onClick={handleSubmitApplication}
-                  disabled={
-                    isSubmittingApplication || !applicationMessage.trim()
-                  }
-                >
-                  {isSubmittingApplication && (
-                    <LoadingSpinner size="sm" className="mr-2" />
-                  )}
-                  <Send className="h-4 w-4 mr-2" />
-                  Submit Application
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Property Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Property Reference</CardTitle>
+          {/* Booking / Inquiry Form */}
+          <Card className="shadow-md border-t-4 border-t-blue-600">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                <span>Book a Viewing / Inquire</span>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center text-xs">
+            <CardContent>
+              {inquirySubmitted ? (
+                <div className="text-center py-6 space-y-3">
+                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="h-6 w-6" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 text-base">Request Submitted!</h4>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    Your viewing inquiry for <strong>{property.title}</strong> has been forwarded directly to the landlord's dashboard.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => setInquirySubmitted(false)}
+                  >
+                    Send Another Request
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitViewingRequest} className="space-y-4">
+                  <div>
+                    <Label htmlFor="tenant-name" className="text-xs font-semibold">Your Full Name *</Label>
+                    <Input
+                      id="tenant-name"
+                      placeholder="e.g. Tendai Moyo"
+                      value={tenantName}
+                      onChange={(e) => setTenantName(e.target.value)}
+                      required
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="tenant-phone" className="text-xs font-semibold">Your Phone / WhatsApp Number *</Label>
+                    <Input
+                      id="tenant-phone"
+                      placeholder="e.g. +263 77 123 4567"
+                      value={tenantPhone}
+                      onChange={(e) => setTenantPhone(e.target.value)}
+                      required
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    <Label htmlFor="viewing-date" className="text-xs font-semibold">Preferred Viewing Date</Label>
+                    <Input
+                      id="viewing-date"
+                      type="date"
+                      value={viewingDate}
+                      onChange={(e) => setViewingDate(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-semibold">Preferred Time Slot</Label>
+                    <Select value={viewingTimeSlot} onValueChange={setViewingTimeSlot}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Morning (9:00 AM - 12:00 PM)">Morning (9:00 AM - 12:00 PM)</SelectItem>
+                        <SelectItem value="Afternoon (1:00 PM - 4:00 PM)">Afternoon (1:00 PM - 4:00 PM)</SelectItem>
+                        <SelectItem value="Late Afternoon (4:00 PM - 6:00 PM)">Late Afternoon (4:00 PM - 6:00 PM)</SelectItem>
+                        <SelectItem value="Weekend Anytime">Weekend Anytime</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="inquiry-message" className="text-xs font-semibold">Message / Questions (Optional)</Label>
+                    <Textarea
+                      id="inquiry-message"
+                      placeholder="e.g. Are pets allowed? When is the earliest move-in date?"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={3}
+                      className="mt-1 text-sm"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                    disabled={isSubmittingInquiry}
+                  >
+                    {isSubmittingInquiry ? (
+                      <LoadingSpinner size="sm" className="mr-2" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Send In-App Viewing Request
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Property Reference */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Property Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2.5 text-xs">
+              <div className="flex justify-between items-center">
                 <span className="text-gray-500">Listing ID</span>
-                <span className="font-mono text-gray-700 truncate max-w-[140px]">{property.id}</span>
+                <span className="font-mono text-gray-700">{property.id.slice(0, 10)}...</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Listed By</span>
+                <span className="font-medium text-gray-800">Verified Landlord</span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-gray-500">Status</span>
-                <Badge
-                  variant={
-                    property.status === "available" ? "default" : "secondary"
-                  }
-                >
+                <Badge variant={property.status === "available" ? "default" : "secondary"}>
                   {property.status}
                 </Badge>
               </div>

@@ -7,7 +7,7 @@ import { formatPrice } from "@/lib/currency";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, MapPin, Bed, Bath, Square, Eye } from "lucide-react";
+import { Heart, MapPin, Bed, Bath, Square, Eye, Star } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface PropertyCardProps {
@@ -83,10 +83,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden relative">
       <div className="relative">
         <Link to={`/property/${property.id}`}>
-          <div className="aspect-[4/3] overflow-hidden">
+          <div className="aspect-[4/3] overflow-hidden bg-gray-100">
             {primaryImage ? (
               <img
                 src={primaryImage.url}
@@ -117,15 +117,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           </Button>
         )}
 
-        {/* Status Badge */}
-        <div className="absolute top-2 left-2">
-          <Badge variant={getStatusBadgeVariant(property.status)}>
+        {/* Badges */}
+        <div className="absolute top-2 left-2 flex gap-1.5 flex-wrap">
+          {property.isFeatured && (
+            <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs shadow-sm flex items-center">
+              <Star className="h-3 w-3 mr-1 fill-white" /> Featured
+            </Badge>
+          )}
+          <Badge variant={getStatusBadgeVariant(property.status)} className="text-xs">
             {property.status.toUpperCase()}
           </Badge>
         </div>
 
         {/* Views */}
-        <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs flex items-center space-x-1">
+        <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded text-xs flex items-center space-x-1">
           <Eye className="h-3 w-3" />
           <span>{property.views || 0}</span>
         </div>
@@ -151,7 +156,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
             {/* Location */}
             <div className="flex items-center text-gray-600 text-sm">
-              <MapPin className="h-4 w-4 mr-1" />
+              <MapPin className="h-4 w-4 mr-1 text-red-500" />
               <span>
                 {property.location.suburb}, {property.location.city}
               </span>
