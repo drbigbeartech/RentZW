@@ -3,16 +3,14 @@ import { Link } from "react-router-dom";
 import {
   Property,
   SearchFilters,
-  PaginatedResponse,
   PlatformStats,
 } from "@/types";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
 import PropertyCard from "@/components/property/PropertyCard";
 import PropertySearch from "@/components/property/PropertySearch";
 import LoadingSpinner, { PageLoader } from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Building,
@@ -22,10 +20,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Heart,
-  Star,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { propertyService } from "@/lib/propertyService";
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -50,192 +47,17 @@ const Home: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
+      const [res, stats] = await Promise.all([
+        propertyService.getProperties({}, 1, 12),
+        propertyService.getStats(),
+      ]);
 
-      // Mock data - In real app, fetch from API
-      const mockProperties: Property[] = [
-        {
-          id: "prop1",
-          title: "Modern 3-bedroom house in Borrowdale",
-          description:
-            "Beautiful modern house with garden and swimming pool. This stunning property features contemporary design with spacious rooms, modern finishes, and excellent security.",
-          location: { city: "Harare", suburb: "Borrowdale" },
-          propertyType: "house",
-          furnishingStatus: "furnished",
-          priceUSD: 1500,
-          priceZWL: 480000,
-          bedrooms: 3,
-          bathrooms: 2,
-          amenities: [
-            "Swimming Pool",
-            "Security",
-            "Parking",
-            "Garden",
-            "Wi-Fi",
-          ],
-          images: [
-            {
-              id: "img1",
-              url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
-              alt: "Modern house exterior",
-              isPrimary: true,
-            },
-          ],
-          status: "available",
-          landlordId: "landlord1",
-          landlord: {
-            id: "landlord1",
-            email: "john@example.com",
-            fullName: "John Smith",
-            phoneNumber: "+263 77 123 4567",
-            userType: "landlord",
-            isVerified: true,
-            createdAt: "2024-01-01T00:00:00Z",
-          },
-          views: 145,
-          createdAt: "2024-01-10T00:00:00Z",
-          updatedAt: "2024-01-10T00:00:00Z",
-        },
-        {
-          id: "prop2",
-          title: "Cozy 2-bedroom apartment in Avondale",
-          description:
-            "Well-maintained apartment in quiet neighborhood with easy access to amenities and public transport.",
-          location: { city: "Harare", suburb: "Avondale" },
-          propertyType: "apartment",
-          furnishingStatus: "partially_furnished",
-          priceUSD: 800,
-          priceZWL: 256000,
-          bedrooms: 2,
-          bathrooms: 1,
-          amenities: ["Security", "Parking", "Wi-Fi"],
-          images: [
-            {
-              id: "img2",
-              url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
-              alt: "Apartment living room",
-              isPrimary: true,
-            },
-          ],
-          status: "available",
-          landlordId: "landlord2",
-          landlord: {
-            id: "landlord2",
-            email: "mary@example.com",
-            fullName: "Mary Johnson",
-            phoneNumber: "+263 77 987 6543",
-            userType: "landlord",
-            isVerified: true,
-            createdAt: "2024-01-01T00:00:00Z",
-          },
-          views: 87,
-          createdAt: "2024-01-15T00:00:00Z",
-          updatedAt: "2024-01-15T00:00:00Z",
-        },
-        {
-          id: "prop3",
-          title: "Luxury penthouse in Mount Pleasant",
-          description:
-            "Exclusive penthouse with panoramic city views, premium finishes, and top-tier amenities.",
-          location: { city: "Harare", suburb: "Mount Pleasant" },
-          propertyType: "apartment",
-          furnishingStatus: "furnished",
-          priceUSD: 2500,
-          priceZWL: 800000,
-          bedrooms: 4,
-          bathrooms: 3,
-          amenities: [
-            "Swimming Pool",
-            "Gym",
-            "Security",
-            "Parking",
-            "Air Conditioning",
-            "Balcony",
-          ],
-          images: [
-            {
-              id: "img3",
-              url: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800",
-              alt: "Luxury penthouse",
-              isPrimary: true,
-            },
-          ],
-          status: "available",
-          landlordId: "landlord3",
-          landlord: {
-            id: "landlord3",
-            email: "david@example.com",
-            fullName: "David Wilson",
-            phoneNumber: "+263 77 555 9999",
-            userType: "landlord",
-            isVerified: true,
-            createdAt: "2024-01-01T00:00:00Z",
-          },
-          views: 203,
-          createdAt: "2024-01-12T00:00:00Z",
-          updatedAt: "2024-01-12T00:00:00Z",
-        },
-        {
-          id: "prop4",
-          title: "Spacious family home in Newlands",
-          description:
-            "Perfect family home with large garden, multiple living areas, and excellent schools nearby.",
-          location: { city: "Harare", suburb: "Newlands" },
-          propertyType: "house",
-          furnishingStatus: "unfurnished",
-          priceUSD: 1200,
-          priceZWL: 384000,
-          bedrooms: 4,
-          bathrooms: 3,
-          amenities: [
-            "Garden",
-            "Security",
-            "Parking",
-            "Laundry",
-            "Pet Friendly",
-          ],
-          images: [
-            {
-              id: "img4",
-              url: "https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?w=800",
-              alt: "Family home",
-              isPrimary: true,
-            },
-          ],
-          status: "available",
-          landlordId: "landlord4",
-          landlord: {
-            id: "landlord4",
-            email: "susan@example.com",
-            fullName: "Susan Brown",
-            phoneNumber: "+263 77 444 5555",
-            userType: "landlord",
-            isVerified: true,
-            createdAt: "2024-01-01T00:00:00Z",
-          },
-          views: 156,
-          createdAt: "2024-01-08T00:00:00Z",
-          updatedAt: "2024-01-08T00:00:00Z",
-        },
-      ];
-
-      const mockStats: PlatformStats = {
-        totalProperties: 127,
-        registeredTenants: 1543,
-        verifiedLandlords: 89,
-        citiesCovered: 8,
-      };
-
-      setProperties(mockProperties);
-      setPlatformStats(mockStats);
-      setTotalPages(Math.ceil(mockProperties.length / 10));
-
-      // Load user's favorites if tenant
-      if (user?.userType === "tenant") {
-        setFavoritePropertyIds(["prop1"]); // Mock favorite
-      }
+      setProperties(res.properties);
+      setTotalPages(res.totalPages);
+      setPlatformStats(stats);
     } catch (error) {
-      console.error("Failed to load data:", error);
-      toast.error("Failed to load properties");
+      console.error("Failed to load properties:", error);
+      toast.error("Failed to load properties from database");
     } finally {
       setIsLoading(false);
     }
@@ -247,15 +69,14 @@ const Home: React.FC = () => {
       setActiveFilters(filters);
       setCurrentPage(1);
 
-      // Mock search - In real app, send filters to API
-      console.log("Searching with filters:", filters);
+      const res = await propertyService.getProperties(filters, 1, 12);
+      setProperties(res.properties);
+      setTotalPages(res.totalPages);
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // For demo, just show message
-      if (Object.keys(filters).length > 0) {
-        toast.success("Search completed");
+      if (res.total > 0) {
+        toast.success(`Found ${res.total} propert${res.total === 1 ? 'y' : 'ies'}`);
+      } else {
+        toast.info("No properties found matching your search");
       }
     } catch (error) {
       toast.error("Search failed");
@@ -286,13 +107,23 @@ const Home: React.FC = () => {
     }
   };
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = async (page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      setIsSearching(true);
+      const res = await propertyService.getProperties(activeFilters, page, 12);
+      setProperties(res.properties);
+      setTotalPages(res.totalPages);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      toast.error("Failed to load page");
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   if (isLoading) {
-    return <PageLoader text="Loading properties..." />;
+    return <PageLoader text="Loading live properties..." />;
   }
 
   return (
@@ -306,7 +137,7 @@ const Home: React.FC = () => {
               <span className="text-blue-600"> Home</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover amazing rental properties across Zimbabwe. From modern
+              Discover verified rental properties across Zimbabwe. From modern
               apartments to family homes, find the perfect place to call home.
             </p>
 
@@ -354,7 +185,7 @@ const Home: React.FC = () => {
               Featured Properties
             </h2>
             <p className="text-gray-600 mt-2">
-              Discover our most popular rental properties
+              Discover our latest verified rental properties in Zimbabwe
             </p>
           </div>
 
@@ -454,74 +285,88 @@ const Home: React.FC = () => {
         )}
       </section>
 
-      {/* Call to Action */}
-      <section className="bg-blue-600 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to List Your Property?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join hundreds of landlords who trust RentZW to connect them with
-            quality tenants. List your property today and start receiving
-            applications.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" asChild>
-              <Link to="/signup">Get Started</Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-blue-600"
-              asChild
-            >
-              <Link to="/about">Learn More</Link>
-            </Button>
+      {/* Why Choose RentZW */}
+      <section className="bg-gray-50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Why Choose RentZW?
+            </h2>
+            <p className="text-gray-600">
+              The smartest and most secure way to rent in Zimbabwe
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Local Expertise
+              </h3>
+              <p className="text-gray-600">
+                Tailored for Zimbabwe's property market with local currency
+                support and verified neighborhoods.
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Verified Users
+              </h3>
+              <p className="text-gray-600">
+                Direct WhatsApp contact with verified landlords and genuine tenants for safe transactions.
+              </p>
+            </div>
+
+            <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Fair Pricing
+              </h3>
+              <p className="text-gray-600">
+                Transparent pricing with dual currency support (USD & ZWL)
+                and real-time exchange rates.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Popular Locations */}
-      <section className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Popular Locations
-          </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Explore rental properties in Zimbabwe's most sought-after
-            neighborhoods
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { name: "Borrowdale", properties: 23 },
-            { name: "Avondale", properties: 18 },
-            { name: "Mount Pleasant", properties: 15 },
-            { name: "Newlands", properties: 12 },
-            { name: "Belgravia", properties: 9 },
-            { name: "Greendale", properties: 7 },
-            { name: "Hillside", properties: 11 },
-            { name: "Burnside", properties: 8 },
-          ].map((location) => (
-            <Link
-              key={location.name}
-              to={`/?city=Harare&suburb=${location.name}`}
-              className="group"
-            >
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-4 text-center">
-                  <MapPin className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {location.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {location.properties} properties
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+      {/* CTA Section */}
+      <section className="bg-blue-600 text-white py-16">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-2xl mx-auto space-y-6">
+            <h2 className="text-3xl md:text-4xl font-bold">
+              Are You a Landlord?
+            </h2>
+            <p className="text-blue-100 text-lg">
+              List your property on RentZW and connect with thousands of
+              verified tenants across Zimbabwe.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/signup?type=landlord">
+                <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-gray-100 font-semibold">
+                  List Your Property
+                </Button>
+              </Link>
+              <Link to="/signup?type=tenant">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto border-white text-white hover:bg-blue-700 font-semibold"
+                >
+                  Find a Rental
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>

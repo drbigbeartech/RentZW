@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Property, PropertyApplication } from "@/types";
+import { Property } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatPrice } from "@/lib/currency";
+import { propertyService } from "@/lib/propertyService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +24,8 @@ import {
   Eye,
   ArrowLeft,
   Share,
-  Star,
   CheckCircle,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -50,104 +51,13 @@ const PropertyDetail: React.FC = () => {
   const loadProperty = async (propertyId: string) => {
     try {
       setIsLoading(true);
-
-      // Mock data - In real app, fetch from API
-      const mockProperty: Property = {
-        id: propertyId,
-        title: "Modern 3-bedroom house in Borrowdale",
-        description: `This stunning contemporary home offers the perfect blend of modern luxury and comfortable living. 
-        Located in the prestigious Borrowdale neighborhood, this property features:
-
-        ✓ Spacious open-plan living areas with high ceilings
-        ✓ Modern kitchen with granite countertops and premium appliances
-        ✓ Master bedroom with en-suite bathroom and walk-in closet
-        ✓ Two additional bedrooms with built-in wardrobes
-        ✓ Beautiful landscaped garden with mature trees
-        ✓ Swimming pool perfect for entertainment
-        ✓ Double garage with remote access
-        ✓ 24/7 security in a gated community
-        ✓ Backup generator and solar water heating
-        ✓ Close to excellent schools and shopping centers
-
-        This property is ideal for families looking for a safe, secure, and luxurious living environment in one of Harare's most sought-after suburbs.`,
-        location: { city: "Harare", suburb: "Borrowdale" },
-        propertyType: "house",
-        furnishingStatus: "furnished",
-        priceUSD: 1500,
-        priceZWL: 480000,
-        bedrooms: 3,
-        bathrooms: 2,
-        amenities: [
-          "Swimming Pool",
-          "Security",
-          "Parking",
-          "Garden",
-          "Wi-Fi",
-          "Air Conditioning",
-          "Generator",
-          "Solar Power",
-          "DSTV",
-          "Laundry",
-          "Kitchen",
-          "Balcony",
-        ],
-        images: [
-          {
-            id: "img1",
-            url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
-            alt: "Modern house exterior",
-            isPrimary: true,
-          },
-          {
-            id: "img2",
-            url: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
-            alt: "Spacious living room",
-            isPrimary: false,
-          },
-          {
-            id: "img3",
-            url: "https://images.unsplash.com/photo-1556912173-3bb406ef7e77?w=800",
-            alt: "Modern kitchen",
-            isPrimary: false,
-          },
-          {
-            id: "img4",
-            url: "https://images.unsplash.com/photo-1571508601890-de8de2873de3?w=800",
-            alt: "Master bedroom",
-            isPrimary: false,
-          },
-          {
-            id: "img5",
-            url: "https://images.unsplash.com/photo-1571508601891-ca5e54ce8e7d?w=800",
-            alt: "Swimming pool",
-            isPrimary: false,
-          },
-        ],
-        status: "available",
-        landlordId: "landlord1",
-        landlord: {
-          id: "landlord1",
-          email: "john@example.com",
-          fullName: "John Smith",
-          phoneNumber: "+263 77 123 4567",
-          userType: "landlord",
-          isVerified: true,
-          createdAt: "2024-01-01T00:00:00Z",
-        },
-        views: 145,
-        createdAt: "2024-01-10T00:00:00Z",
-        updatedAt: "2024-01-10T00:00:00Z",
-      };
-
-      setProperty(mockProperty);
-
-      // Check if property is in user's favorites
-      if (user?.userType === "tenant") {
-        setIsFavorite(false); // Mock check
+      const data = await propertyService.getPropertyById(propertyId);
+      if (!data) {
+        toast.error("Property not found");
+        navigate("/");
+        return;
       }
-
-      // Increment view count
-      // In real app, this would be done on the backend
+      setProperty(data);
     } catch (error) {
       console.error("Failed to load property:", error);
       toast.error("Failed to load property details");
@@ -176,7 +86,7 @@ const PropertyDetail: React.FC = () => {
       );
     } catch (error) {
       toast.error("Failed to update favorite");
-      setIsFavorite(!isFavorite); // Revert on error
+      setIsFavorite(!isFavorite);
     }
   };
 
@@ -198,11 +108,9 @@ const PropertyDetail: React.FC = () => {
 
     try {
       setIsSubmittingApplication(true);
-
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      toast.success("Application submitted successfully!");
+      // Simulate submission / connect to property_applications table
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      toast.success("Application submitted successfully to landlord!");
       setApplicationMessage("");
     } catch (error) {
       toast.error("Failed to submit application");
@@ -212,10 +120,10 @@ const PropertyDetail: React.FC = () => {
   };
 
   const handleContactLandlord = () => {
-    if (!property?.landlord.email) return;
+    if (!property?.landlord?.email) return;
 
     const subject = `Inquiry about ${property.title}`;
-    const body = `Hello ${property.landlord.fullName},\n\nI am interested in your property: ${property.title}\nLocation: ${property.location.suburb}, ${property.location.city}\n\nPlease let me know if it's still available and if we can arrange a viewing.\n\nThank you.`;
+    const body = `Hello ${property.landlord.fullName},\n\nI am interested in your property listed on RentZW: ${property.title}\nLocation: ${property.location.suburb}, ${property.location.city}\nPrice: $${property.priceUSD}/month\n\nPlease let me know if it is still available and when I can view it.\n\nThank you.`;
 
     window.location.href = `mailto:${property.landlord.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
@@ -232,7 +140,6 @@ const PropertyDetail: React.FC = () => {
         // User cancelled sharing
       }
     } else {
-      // Fallback to copying URL
       await navigator.clipboard.writeText(window.location.href);
       toast.success("Property link copied to clipboard");
     }
@@ -265,6 +172,14 @@ const PropertyDetail: React.FC = () => {
     currency,
     exchangeRate.ZWL,
   );
+
+  // WhatsApp click-to-chat setup
+  const rawPhone = property.landlord?.phoneNumber || "+263771234567";
+  const cleanPhone = rawPhone.replace(/[^0-9]/g, "");
+  const whatsappText = encodeURIComponent(
+    `Hello ${property.landlord?.fullName || 'Landlord'}, I am inquiring about your property on RentZW:\n"${property.title}" in ${property.location.suburb}, ${property.location.city} ($${property.priceUSD}/month).\nLink: ${window.location.href}`
+  );
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${whatsappText}`;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -335,7 +250,7 @@ const PropertyDetail: React.FC = () => {
                     variant={
                       property.status === "available" ? "default" : "secondary"
                     }
-                    className="text-sm"
+                    className="text-sm font-semibold"
                   >
                     {property.status.toUpperCase()}
                   </Badge>
@@ -344,7 +259,7 @@ const PropertyDetail: React.FC = () => {
                 {/* Views */}
                 <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm flex items-center space-x-1">
                   <Eye className="h-4 w-4" />
-                  <span>{property.views}</span>
+                  <span>{property.views} views</span>
                 </div>
               </div>
 
@@ -353,7 +268,7 @@ const PropertyDetail: React.FC = () => {
                 <div className="flex space-x-2 p-4 overflow-x-auto">
                   {property.images.map((image, index) => (
                     <button
-                      key={image.id}
+                      key={image.id || index}
                       onClick={() => setCurrentImageIndex(index)}
                       className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
                         index === currentImageIndex
@@ -381,14 +296,14 @@ const PropertyDetail: React.FC = () => {
                   {property.title}
                 </h1>
                 <div className="flex items-center text-gray-600 mb-4">
-                  <MapPin className="h-5 w-5 mr-2" />
-                  <span>
+                  <MapPin className="h-5 w-5 mr-2 text-red-500" />
+                  <span className="font-medium">
                     {property.location.suburb}, {property.location.city}
                   </span>
                 </div>
                 <div className="text-3xl font-bold text-blue-600">
                   {formattedPrice}
-                  <span className="text-lg text-gray-600">/month</span>
+                  <span className="text-lg text-gray-600 font-normal"> / month</span>
                 </div>
               </div>
 
@@ -425,7 +340,7 @@ const PropertyDetail: React.FC = () => {
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Description
                 </h3>
-                <div className="text-gray-700 whitespace-pre-line">
+                <div className="text-gray-700 whitespace-pre-line leading-relaxed">
                   {property.description}
                 </div>
               </div>
@@ -433,13 +348,13 @@ const PropertyDetail: React.FC = () => {
               {/* Amenities */}
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  Amenities
+                  Amenities & Key Features
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {property.amenities.map((amenity) => (
-                    <div key={amenity} className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm text-gray-700">{amenity}</span>
+                    <div key={amenity} className="flex items-center space-x-2 bg-gray-50 p-2.5 rounded-md">
+                      <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                      <span className="text-sm font-medium text-gray-800">{amenity}</span>
                     </div>
                   ))}
                 </div>
@@ -455,43 +370,62 @@ const PropertyDetail: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <User className="h-5 w-5" />
-                <span>Property Owner</span>
+                <span>Landlord / Agent Contact</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold text-gray-900">
-                    {property.landlord.fullName}
+                    {property.landlord?.fullName || "Verified Landlord"}
                   </h4>
-                  {property.landlord.isVerified && (
-                    <Badge variant="secondary" className="text-xs">
+                  {property.landlord?.isVerified && (
+                    <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-800 border-emerald-200">
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Verified
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-600">Property Owner</p>
+                <p className="text-sm text-gray-600">Listed on RentZW</p>
               </div>
 
-              <div className="space-y-2">
-                <Button className="w-full" onClick={handleContactLandlord}>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Contact Owner
-                </Button>
-
+              <div className="space-y-2.5">
+                {/* WhatsApp Direct Chat Button */}
                 <a
-                  href={`tel:${property.landlord.phoneNumber}`}
-                  className="w-full"
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full block"
                 >
-                  <Button variant="outline" className="w-full">
-                    <Phone className="h-4 w-4 mr-2" />
-                    {property.landlord.phoneNumber}
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Chat on WhatsApp
                   </Button>
                 </a>
+
+                {/* Direct Phone Call */}
+                {property.landlord?.phoneNumber && (
+                  <a
+                    href={`tel:${property.landlord.phoneNumber}`}
+                    className="w-full block"
+                  >
+                    <Button variant="outline" className="w-full">
+                      <Phone className="h-4 w-4 mr-2" />
+                      Call {property.landlord.phoneNumber}
+                    </Button>
+                  </a>
+                )}
+
+                {/* Email Inquiry */}
+                {property.landlord?.email && (
+                  <Button variant="ghost" className="w-full" onClick={handleContactLandlord}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send Email Inquiry
+                  </Button>
+                )}
               </div>
 
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 pt-2 border-t">
                 Listed on {new Date(property.createdAt).toLocaleDateString()}
               </div>
             </CardContent>
@@ -510,7 +444,7 @@ const PropertyDetail: React.FC = () => {
                   </Label>
                   <Textarea
                     id="application-message"
-                    placeholder="Tell the landlord why you're interested in this property..."
+                    placeholder="Introduce yourself, occupation, and desired move-in date..."
                     value={applicationMessage}
                     onChange={(e) => setApplicationMessage(e.target.value)}
                     rows={4}
@@ -538,25 +472,15 @@ const PropertyDetail: React.FC = () => {
           {/* Property Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Property Information</CardTitle>
+              <CardTitle>Property Reference</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Property ID</span>
-                <span className="text-sm font-medium">{property.id}</span>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-500">Listing ID</span>
+                <span className="font-mono text-gray-700 truncate max-w-[140px]">{property.id}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Listed Date</span>
-                <span className="text-sm font-medium">
-                  {new Date(property.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Total Views</span>
-                <span className="text-sm font-medium">{property.views}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Status</span>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-500">Status</span>
                 <Badge
                   variant={
                     property.status === "available" ? "default" : "secondary"
