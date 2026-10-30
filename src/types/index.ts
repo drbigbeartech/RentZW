@@ -3,7 +3,7 @@ export interface User {
   email: string;
   fullName: string;
   phoneNumber: string;
-  userType: "tenant" | "landlord";
+  userType: "tenant" | "landlord" | "admin";
   isVerified: boolean;
   createdAt: string;
 }
@@ -23,7 +23,7 @@ export interface Property {
   images: PropertyImage[];
   status: PropertyStatus;
   landlordId: string;
-  landlord: User;
+  landlord?: User;
   views: number;
   createdAt: string;
   updatedAt: string;
@@ -106,13 +106,6 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-export interface DashboardStats {
-  totalProperties: number;
-  totalViews: number;
-  totalInquiries: number;
-  totalApplications: number;
-}
-
 export interface PlatformStats {
   totalProperties: number;
   registeredTenants: number;
@@ -120,56 +113,44 @@ export interface PlatformStats {
   citiesCovered: number;
 }
 
-export interface ExchangeRate {
-  USD: number;
-  ZWL: number;
-  lastUpdated: string;
-}
-
-// Zimbabwe locations
 export const ZIMBABWE_LOCATIONS = {
   Harare: [
     "Avondale",
     "Borrowdale",
     "Mount Pleasant",
-    "Belgravia",
     "Newlands",
+    "Eastlea",
+    "Belgravia",
+    "Highlands",
     "Greendale",
-    "Waterfalls",
-    "Highfield",
+    "Mabelreign",
+    "Westgate",
+    "CBD",
   ],
   Bulawayo: [
-    "Burnside",
+    "Kumalo",
     "Hillside",
     "Suburbs",
-    "North End",
-    "Woodville",
-    "Donnington",
-    "Riverside",
+    "Bradfield",
+    "Burnside",
+    "CBD",
+    "Morningside",
   ],
-  Mutare: ["Murambi", "Dangamvura", "Yeovil", "Tiger Bay"],
-  Gweru: ["Senga", "Northlea", "Woodlands"],
-  Kwekwe: ["Mbizo", "Redcliff"],
-  Masvingo: ["Rujeko", "Mucheke"],
-  Chinhoyi: ["Coldstream", "Orange Grove"],
-  "Victoria Falls": ["Chinotimba", "Aerodrome"],
-};
+  Mutare: ["Murambi", "Palmerstone", "CBD", "Fairbridge Park"],
+  Gweru: ["Southdowns", "Daylesford", "Lundi Park", "CBD"],
+} as const;
 
 export const PROPERTY_AMENITIES = [
+  "Prolific Borehole",
+  "Solar Backup / Inverter",
+  "Water Tanks (5000L+)",
   "Swimming Pool",
-  "Gym",
-  "Security",
-  "Parking",
-  "Wi-Fi",
+  "Security Guard / 24/7 Security",
+  "Electric Gate & Fence",
+  "Wi-Fi Ready / Fibre",
+  "Staff Quarters",
+  "Garage / Covered Parking",
   "Air Conditioning",
-  "Garden",
-  "Balcony",
-  "Laundry",
-  "Kitchen",
-  "Furnished",
-  "Pet Friendly",
-  "DSTV",
-  "Generator",
-  "Borehole",
-  "Solar Power",
-];
+  "Solar Geyser",
+  "Garden / Yard",
+] as const;

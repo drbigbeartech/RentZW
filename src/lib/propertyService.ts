@@ -107,6 +107,25 @@ export const propertyService = {
     return { properties, total, totalPages };
   },
 
+  // Fetch properties for a landlord or all if admin
+  async getMyProperties(userId: string, isAdmin = false): Promise<Property[]> {
+    let query = supabase
+      .from("properties")
+      .select("*, profiles(full_name, email, phone_number)")
+      .order("created_at", { ascending: false });
+
+    if (!isAdmin) {
+      query = query.eq("landlord_id", userId);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error fetching user properties:", error);
+      return [];
+    }
+    return (data || []).map(mapRowToProperty);
+  },
+
   // Fetch single property by ID and increment views
   async getPropertyById(id: string): Promise<Property | null> {
     const { data, error } = await supabase
@@ -128,6 +147,20 @@ export const propertyService = {
       .then();
 
     return mapRowToProperty(data);
+  },
+
+  // Delete property
+  async deleteProperty(propertyId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from("properties")
+      .delete()
+      .eq("id", propertyId);
+
+    if (error) {
+      console.error("Error deleting property:", error);
+      throw error;
+    }
+    return true;
   },
 
   // Upload image to Supabase Storage
@@ -216,9 +249,9 @@ export const propertyService = {
 
     return {
       totalProperties: propertyCount || 0,
-      registeredTenants: 120, // initial benchmark
+      registeredTenants: 120,
       verifiedLandlords: 45,
-      citiesCovered: 4, // Harare, Bulawayo, Mutare, Gweru
+      citiesCovered: 4,
     };
   },
 };

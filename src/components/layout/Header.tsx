@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { Currency } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -22,10 +24,11 @@ import {
   X,
   Building,
   DollarSign,
+  Shield,
 } from "lucide-react";
 
 const Header: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isLandlord, isAdmin, logout } = useAuth();
   const { currency, setCurrency } = useCurrency();
   const location = useLocation();
   const navigate = useNavigate();
@@ -83,7 +86,7 @@ const Header: React.FC = () => {
               <span>Properties</span>
             </Link>
 
-            {isAuthenticated && user?.userType === "landlord" && (
+            {isAuthenticated && isLandlord && (
               <Link
                 to="/add-property"
                 className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -123,22 +126,28 @@ const Header: React.FC = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => setCurrency("USD")}
-                  className={currency === "USD" ? "bg-blue-50" : ""}
-                >
-                  USD - US Dollar
+                <DropdownMenuLabel>Select Currency</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setCurrency("USD")}>
+                  USD ($) - United States Dollar
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setCurrency("ZWL")}
-                  className={currency === "ZWL" ? "bg-blue-50" : ""}
-                >
-                  ZWL - Zimbabwe Dollar
+                <DropdownMenuItem onClick={() => setCurrency("ZWL")}>
+                  ZWL (Z$) - Zimbabwe Dollar
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Desktop Auth Menu */}
+            {/* List Property CTA for non-landlords / guests */}
+            {!isLandlord && (
+              <Link to="/signup?type=landlord" className="hidden md:inline-block">
+                <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                  <PlusCircle className="h-4 w-4 mr-1" />
+                  List a Property
+                </Button>
+              </Link>
+            )}
+
+            {/* User Menu */}
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -157,11 +166,19 @@ const Header: React.FC = () => {
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">{user?.fullName}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground truncate max-w-[180px]">
                         {user?.email}
                       </p>
-                      <Badge variant="secondary" className="w-fit text-xs">
-                        {user?.userType === "landlord" ? "Landlord" : "Tenant"}
+                      <Badge variant={isAdmin ? "default" : isLandlord ? "secondary" : "outline"} className="w-fit text-xs mt-1">
+                        {isAdmin ? (
+                          <span className="flex items-center">
+                            <Shield className="h-3 w-3 mr-1" /> Admin
+                          </span>
+                        ) : isLandlord ? (
+                          "Landlord"
+                        ) : (
+                          "Tenant"
+                        )}
                       </Badge>
                     </div>
                   </div>
@@ -172,6 +189,14 @@ const Header: React.FC = () => {
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
+                  {isLandlord && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/add-property" className="w-full">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add New Property
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -182,10 +207,10 @@ const Header: React.FC = () => {
             ) : (
               <div className="hidden md:flex items-center space-x-2">
                 <Button variant="ghost" asChild>
-                  <Link to="/login">Login</Link>
+                  <Link to="/login">Sign In</Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/signup">Sign Up</Link>
+                  <Link to="/signup">Register</Link>
                 </Button>
               </div>
             )}
@@ -223,7 +248,7 @@ const Header: React.FC = () => {
                 <span>Properties</span>
               </Link>
 
-              {isAuthenticated && user?.userType === "landlord" && (
+              {isAuthenticated && isLandlord && (
                 <Link
                   to="/add-property"
                   className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
@@ -269,47 +294,29 @@ const Header: React.FC = () => {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 w-full text-left"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 text-left w-full"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Log out</span>
                   </button>
                 </>
               ) : (
-                <div className="flex flex-col space-y-2 px-3">
-                  <Button variant="ghost" asChild className="justify-start">
-                    <Link to="/login" onClick={closeMobileMenu}>
-                      Login
-                    </Link>
-                  </Button>
-                  <Button asChild className="justify-start">
-                    <Link to="/signup" onClick={closeMobileMenu}>
-                      Sign Up
-                    </Link>
-                  </Button>
+                <div className="flex flex-col space-y-2 pt-2 border-t">
+                  <Link to="/login" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/signup" onClick={closeMobileMenu}>
+                    <Button className="w-full justify-start">Register</Button>
+                  </Link>
+                  <Link to="/signup?type=landlord" onClick={closeMobileMenu}>
+                    <Button variant="outline" className="w-full justify-start text-blue-600 border-blue-200">
+                      <PlusCircle className="h-4 w-4 mr-2" /> List a Property
+                    </Button>
+                  </Link>
                 </div>
               )}
-
-              {/* Mobile Currency Selector */}
-              <div className="px-3 pt-2 border-t">
-                <p className="text-xs text-gray-500 mb-2">Currency</p>
-                <div className="flex space-x-2">
-                  <Button
-                    variant={currency === "USD" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrency("USD")}
-                  >
-                    USD
-                  </Button>
-                  <Button
-                    variant={currency === "ZWL" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrency("ZWL")}
-                  >
-                    ZWL
-                  </Button>
-                </div>
-              </div>
             </nav>
           </div>
         )}
